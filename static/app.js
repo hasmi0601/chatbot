@@ -36,9 +36,11 @@ class Chatbox {
         }
     }
 
-    onSendButton(chatbox) {
-        var textField = chatbox.querySelector('input');
-        let text1 = textField.value
+    onSendButton(chatbox,text1="") {
+      var textField = chatbox.querySelector('input');
+        if(text1==""){
+          text1 = textField.value;
+        }
         if (text1 === "") {
             return;
         }
@@ -67,25 +69,55 @@ class Chatbox {
             textField.value = ''
           });
     }
-
     updateChatText(chatbox) {
-        var html = '';
-        this.messages.slice().reverse().forEach(function(item, index) {
-            if (item.name === "HosBot")
-            {
-                html += '<div class="messages__item messages__item--visitor">' + item.message + '</div>'
+        const messageContainer = chatbox.querySelector('.chatbox__messages');
+      
+        // Clear existing content
+        messageContainer.innerHTML = '';
+      
+        // Loop through each message
+        this.messages.slice().reverse().forEach((item, index) => {
+          let messageHtml = '';
+          if (item.name === 'HosBot') {
+            if (Array.isArray(item.message)) {
+              // If the message is a list, create separate textboxes for each element
+              item.message.forEach((element) => {
+                let newclass="";
+                if(element.includes("Q."))
+                    newclass="clickable";
+                messageHtml = `<div class="messages__item messages__item--visitor ${newclass}">${element}</div>`+messageHtml;
+              });
+            } else {
+              // If the message is not a list, display it in a single textbox
+              messageHtml = `<div class="messages__item messages__item--visitor">${item.message}</div>`;
             }
-            else
-            {
-                html += '<div class="messages__item messages__item--operator">' + item.message + '</div>'
-            }
-          });
-
-        const chatmessage = chatbox.querySelector('.chatbox__messages');
-        chatmessage.innerHTML = html;
-    }
+          } else {
+            messageHtml = `<div class="messages__item messages__item--operator">${item.message}</div>`;
+          }
+          messageContainer.innerHTML += messageHtml;
+          reClick();
+        });
+      
+        // Scroll to the bottom of the message container
+        messageContainer.scrollTop = messageContainer.scrollHeight;
+      }
+      
 }
 
 
 const chatbox = new Chatbox();
 chatbox.display();
+
+function reClick() {
+  const chatboxt = document.querySelector('.chatbox__support');
+  const clickable = chatboxt.querySelectorAll('.clickable');
+
+  clickable.forEach(item => {
+    console.log("loop workinng")
+    item.addEventListener('click', ()=> {
+      console.log(item.innerHTML);
+      chatbox.onSendButton(chatboxt,item.innerHTML);
+    });
+  });
+}
+
